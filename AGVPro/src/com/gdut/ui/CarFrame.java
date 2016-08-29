@@ -52,8 +52,8 @@ public class CarFrame extends JFrame {
 	public static JTextField ipText;
 	public static Socket carSocket;
 	private OutputStream carOutputStream;
-	private ImageIcon ipIconR = new ImageIcon("D:\\JAVA程序\\指示灯_红.png");
-	private ImageIcon ipIconG = new ImageIcon("D:\\JAVA程序\\指示灯_绿.png");
+	private ImageIcon ipIconR = new ImageIcon("./src/image/RedLight.png");  
+	private ImageIcon ipIconG = new ImageIcon("./src/image/GreenLight.png");
 	private JLabel ipFlag = new JLabel(ipIconR);
 	private JButton loadButton;
 	public static JTextField loadTextField;
@@ -74,8 +74,6 @@ public class CarFrame extends JFrame {
 	
 		ipIconR.setImage(ipIconR.getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
 		ipIconG.setImage(ipIconG.getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
-		
-		
 		
 		ipConnButton = new JButton("\u8FDE\u63A5");
 		ipConnButton.addMouseListener(new MouseAdapter() {
@@ -181,8 +179,6 @@ public class CarFrame extends JFrame {
 		ipText.setText("\u8BF7\u8F93\u5165\u5C0F\u8F66IP\u5730\u5740");
 		ipText.setColumns(10);
 		
-		ipFlag = new JLabel("Icon");
-		
 		JButton configButton = new JButton("\u914D\u7F6E\u8DEF\u5F84");
 		configButton.addMouseListener(new MouseAdapter() {
 			@Override
@@ -224,6 +220,9 @@ public class CarFrame extends JFrame {
 			}
 		});
 		
+		/*
+		 * 中止轨迹   要立即中断正在执行的线程
+		 * */
 		JButton suspendButton = new JButton("\u4E2D\u6B62");
 		suspendButton.addMouseListener(new MouseAdapter() {
 			@Override
@@ -383,6 +382,7 @@ public class CarFrame extends JFrame {
 				byte[] buf = new MessagePackage().creatMes(mod, (byte)0x03, Integer.parseInt(speedText.getText()), -1);
 				
 				try {
+					
 					carOutputStream.write(buf, 0, buf.length);
 									
 				} catch (IOException e1) {
