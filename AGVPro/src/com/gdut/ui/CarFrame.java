@@ -52,14 +52,13 @@ public class CarFrame extends JFrame {
 	public static JTextField ipText;
 	public static Socket carSocket;
 	private OutputStream carOutputStream;
-	private ImageIcon ipIconR = new ImageIcon("./src/image/RedLight.png");  
-	private ImageIcon ipIconG = new ImageIcon("./src/image/GreenLight.png");
+	private ImageIcon ipIconR = new ImageIcon(this.getClass().getResource("/image/RedLight.png"));  
+	private ImageIcon ipIconG = new ImageIcon(this.getClass().getResource("/image/GreenLight.png"));	//"./src/image/GreenLight.png"
 	private JLabel ipFlag = new JLabel(ipIconR);
 	private JButton loadButton;
 	public static JTextField loadTextField;
 	public static JButton executeButton;
 	private Thread configThread;
-	
 	
 	/**
 	 * Create the frame.

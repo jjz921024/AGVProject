@@ -9,11 +9,11 @@ CarMain: CarMain.cpp
 
 
 CarSocket: CarSocket.cpp
-	$(CC) CarSocket.cpp -o CarSocket
+	$(CC) CarSocket.cpp myutil.cpp -o CarSocket
 
 
 ImgSocket: ImgSocket.cpp
-	$(CC) ImgSocket.cpp -o ImgSocket
+	$(CC) ImgSocket.cpp myutil.cpp -o ImgSocket
 
 clean:
 	$(RM) $(TARGET)

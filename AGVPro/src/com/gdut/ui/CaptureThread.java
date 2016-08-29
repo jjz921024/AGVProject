@@ -41,12 +41,7 @@ public class CaptureThread extends Thread {
 			while ((data = imgBufInputStream.read()) != -1) {			
 				buf[count] = (byte) data;
 				count++;
-			}
-			
-			
-			/*while (imgBufInputStream.read(buf) == -1) {
-				break;
-			}*/
+			}		
 			
 			
 			System.out.println("finish!");

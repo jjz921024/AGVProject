@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <ctype.h> 
+#include "myutil.h"
 
 void do_service(int fd, int *pipe_ctof){
 	unsigned char buf_sock[10];
@@ -27,37 +28,7 @@ void do_service(int fd, int *pipe_ctof){
 		inet_ntop(AF_INET, &clientaddr.sin_addr.s_addr, buffer, sizeof(clientaddr));
 		unsigned short port = ntohs(clientaddr.sin_port);
 		printf("client ip:%s (%d)\n",buffer,port);
-}*/
-
-/* 
- * atoi implementation 
- */  
-int m_atoi(const char * str)
-{  
-    assert(str);  
-      
-    while(isspace(*str)) ++str;  
-      
-    int neg_flag = 0;  
-    if('+' == *str)  
-    {  
-        neg_flag = 0;  
-        ++ str;  
-    }  
-    else if('-' == *str)  
-    {  
-        neg_flag = 1;  
-        ++ str;  
-    }  
-      
-    int retv = 0;  
-    while(isdigit(*str))  
-    {  
-        retv = retv * 10 + *str++ - '0';  
-    }  
-      
-    return neg_flag ? 0-retv : retv;  
-}  
+}*/ 
 
 int main(int argc, char *argv[])
 {
@@ -72,45 +43,7 @@ int main(int argc, char *argv[])
 /*		pipe_ftoc[0] = m_atoi(argv[3]);
 		pipe_ftoc[1] = m_atoi(argv[4]);*/
 
-		struct sockaddr_in clientaddr;
-		int c_len = sizeof(clientaddr);
-		//struct socket_t *c_len1;
-		
-		int sockfd;
-		sockfd = socket(AF_INET, SOCK_STREAM, 0);
-		if(sockfd < 0)
-		{
-			fprintf(stderr,"socket: %s\n", strerror(errno));
-			exit(1);
-		}
-		
-		//set ip and port
-		struct sockaddr_in addr;
-		memset(&addr,0,sizeof(addr));
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons(m_atoi("9191"));
-		addr.sin_addr.s_addr = INADDR_ANY;
-		
-		//bind
-		int len = sizeof(addr);
-		if(bind(sockfd,(struct sockaddr*)&addr, len) < 0)
-		{
-			fprintf(stderr,"bind: %s\n",strerror(errno));
-			exit(1);
-		}
-		
-		if(listen(sockfd,2) < 0)
-		{
-			fprintf(stderr,"listen: %s\n",strerror(errno));
-			exit(1);
-		}
-		
-		int fd;
-		fd = accept(sockfd, (struct sockaddr*)&clientaddr, (socklen_t*)&c_len);
-		if(fd < 0)
-		{
-			fprintf(stderr,"accept: %s\n",strerror(errno));	
-		}
+		int fd = getServiceSocket(9191);
 		
 		close(pipe_ctof[0]);
 		//close(pipe_ftoc[1]);
@@ -120,7 +53,6 @@ int main(int argc, char *argv[])
 		
 		}
 		close(pipe_ctof[1]);
-		close(sockfd);
 		close(fd);
 
 		return 0;
