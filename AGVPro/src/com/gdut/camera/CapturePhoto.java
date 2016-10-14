@@ -65,14 +65,10 @@ public class CapturePhoto extends JFrame {
 		captureButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				
 				new CaptureThread().start();				    
 			}
 		});
 		captureButton.setVerticalAlignment(SwingConstants.TOP);
-		
-		
-		
 		
 		
 		savaButton = new JButton("\u4FDD\u5B58");

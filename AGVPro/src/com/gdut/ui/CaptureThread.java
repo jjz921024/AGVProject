@@ -11,6 +11,9 @@ import java.net.Socket;
 import javax.swing.ImageIcon;
 
 import com.gdut.camera.CapturePhoto;
+import com.gdut.net.FrontMesPack;
+import com.gdut.net.MessagePackage;
+import com.gdut.util.ParseMesPack;
 
 public class CaptureThread extends Thread {
 
@@ -28,9 +31,10 @@ public class CaptureThread extends Thread {
 			 * */		
 			OutputStream captureOutputStream = CarFrame.carSocket.getOutputStream();
 			
-			byte[] cmd_buf = new byte[]{(byte)0x66};
-			captureOutputStream.write(cmd_buf);
-			
+	
+			MessagePackage capturePack = new MessagePackage();
+			capturePack.setCapturePhoto(1);
+			captureOutputStream.write(buf, 0, buf.length);					
 			
 			Socket imgSocket = new Socket(InetAddress.getByName(CarFrame.ipText.getText()), 9999);			
 			InputStream imgInputStream = imgSocket.getInputStream();

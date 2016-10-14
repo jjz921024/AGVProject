@@ -1,0 +1,20 @@
+package com.gdut.util;
+
+import com.gdut.net.FrontMesPack;
+import com.gdut.net.MessagePackage;
+
+public class ParseMesPack {
+	
+	private static MessagePackage resultMes = new MessagePackage();
+	
+	
+	public static MessagePackage parse(FrontMesPack intputMes){
+		//速度是相同的，不用转换
+		resultMes.setSpeed(intputMes.getSpeed());
+		
+		//
+		
+		return null;
+	}
+
+}

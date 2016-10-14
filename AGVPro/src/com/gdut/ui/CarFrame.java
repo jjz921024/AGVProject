@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Arrays;
 
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -29,7 +28,8 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.EmptyBorder;
 
 import com.gdut.camera.CapturePhoto;
-import com.gdut.net.MessagePackage;
+import com.gdut.net.FrontMesPack;
+import com.gdut.util.ParseMesPack;
 
 public class CarFrame extends JFrame {
 
@@ -59,7 +59,8 @@ public class CarFrame extends JFrame {
 	public static JTextField loadTextField;
 	public static JButton executeButton;
 	private Thread configThread;
-	
+
+
 	/**
 	 * Create the frame.
 	 */
@@ -75,20 +76,25 @@ public class CarFrame extends JFrame {
 		ipIconG.setImage(ipIconG.getImage().getScaledInstance(25, 25, Image.SCALE_DEFAULT));
 		
 		ipConnButton = new JButton("\u8FDE\u63A5");
+		
+		/**
+		 *  连接socket，拿到OutputStream
+		 */
 		ipConnButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {	
+					
 					carSocket = new Socket(InetAddress.getByName(ipText.getText()), 9191);
 					if(!carSocket.isClosed()){
-						//OutputStream carOutputStream = carSocket.getOutputStream();
+
 						carOutputStream = carSocket.getOutputStream();
-						byte[] buf = new MessagePackage().creatMes((byte)0x00, (byte)0x00, Integer.parseInt(speedText.getText()), -1);
+						//byte[] buf = new MessagePackage().creatMesByte((byte)0x00, (byte)0x00, Integer.parseInt(speedText.getText()), -1);
+						FrontMesPack frontMesPack = new FrontMesPack(-1, FrontMesPack.START, -1, -1, -1, -1);
+						byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 						carOutputStream.write(buf, 0, buf.length);
-						//carOutputStream.close();
 						
-						ipFlag.setIcon(ipIconG);
-										
+						ipFlag.setIcon(ipIconG);							
 					}				
 				} catch (Exception e1) {
 					JOptionPane.showMessageDialog(contentPane, e1.toString()+e1.getMessage(), "警告", JOptionPane.WARNING_MESSAGE);		
@@ -96,6 +102,31 @@ public class CarFrame extends JFrame {
 			}
 		});
 
+		/**
+		 * 断开socket连接
+		 */
+		ipDisconnButton = new JButton("\u65AD\u5F00");
+		ipDisconnButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				try {
+					//byte[] buf = new MessagePackage().creatMes((byte)0xff, (byte)0xff ,Integer.parseInt(speedText.getText()), -1);
+					FrontMesPack frontMesPack = new FrontMesPack(-1, FrontMesPack.CLOSE, -1, -1, -1, -1);
+					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
+					carOutputStream.write(buf, 0, buf.length);
+					//carOutputStream.close();
+					carSocket.close();
+					
+				} catch (IOException e1) {
+					JOptionPane.showMessageDialog(contentPane, e1.toString()+e1.getMessage(), "警告", JOptionPane.WARNING_MESSAGE);
+				}
+				
+				if(carSocket.isClosed()){
+					ipFlag.setIcon(ipIconR);
+				}
+			}
+		});
+		
 		JPanel ctrlPanel = new JPanel();
 
 		exitButton = new JButton("\u9000\u51FA");
@@ -113,49 +144,32 @@ public class CarFrame extends JFrame {
 				if(keyCtrl.isSelected()){
 					byte dir = 0;
 					if(e.getKeyCode() == KeyEvent.VK_UP ){
-						dir = 0x01;
+						dir = FrontMesPack.UP;
 					}else if(e.getKeyCode() == KeyEvent.VK_DOWN){
-						dir = 0x02;
+						dir = FrontMesPack.DOWN;
 					}else if(e.getKeyCode() == KeyEvent.VK_LEFT){
-						dir = 0x03;
+						dir = FrontMesPack.LEFT;
 					}else if(e.getKeyCode() == KeyEvent.VK_RIGHT){
-						dir = 0x04;
+						dir = FrontMesPack.RIGHT;
 					}else if(e.getKeyCode() == KeyEvent.VK_ENTER){
-						dir = 0x05;
+						dir = FrontMesPack.STOP_MANUAL;
 					}
-					byte[] buf = new MessagePackage().creatMes((byte)0x01, dir, Integer.parseInt(speedText.getText()), -1);
-
-					try {
-						carSocket.getOutputStream().write(buf, 0, buf.length);
-						System.out.println(Arrays.toString(buf));
-					} catch (Exception e1) {
-						JOptionPane.showMessageDialog(contentPane, e1.toString()+e1.getMessage(), "警告", JOptionPane.WARNING_MESSAGE);
+					
+					if(dir != 0){
+						try {
+							FrontMesPack frontMesPack = new FrontMesPack(dir, FrontMesPack.MANUAL, -1, 1000, 100, -1);
+							byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
+							carOutputStream.write(buf, 0, buf.length);					
+							
+						} catch (Exception e1) {
+							JOptionPane.showMessageDialog(contentPane, e1.toString()+e1.getMessage(), "警告", JOptionPane.WARNING_MESSAGE);
+						}
 					}
+					
 				}	
 			}
 		});
-
-		ipDisconnButton = new JButton("\u65AD\u5F00");
-		ipDisconnButton.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				//OutputStream carOutputStream;
-				try {
-					//carOutputStream = carSocket.getOutputStream();
-					byte[] buf = new MessagePackage().creatMes((byte)0xff, (byte)0xff ,Integer.parseInt(speedText.getText()), -1);
-					carOutputStream.write(buf, 0, buf.length);
-					//carOutputStream.close();
-					carSocket.close();
-				} catch (IOException e1) {
-					JOptionPane.showMessageDialog(contentPane, e1.toString()+e1.getMessage(), "警告", JOptionPane.WARNING_MESSAGE);
-				}
-				
-				if(carSocket.isClosed()){
-					ipFlag.setIcon(ipIconR);
-				}
-
-			}
-		});
+	
 
 		JLabel speedSetText = new JLabel("\u901F\u5EA6\u8BBE\u5B9A\uFF1A");
 
@@ -170,7 +184,7 @@ public class CarFrame extends JFrame {
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				if(ipText.getText().equals("请输入小车IP地址")){
-					ipText.setText("192.168.3.");
+					ipText.setText("192.168.2.99");
 				}
 				
 			}
@@ -179,10 +193,12 @@ public class CarFrame extends JFrame {
 		ipText.setColumns(10);
 		
 		JButton configButton = new JButton("\u914D\u7F6E\u8DEF\u5F84");
+		/**
+		 * 配置路径窗口   单独一个线程执行
+		 */
 		configButton.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e) {
-			
+			public void mouseClicked(MouseEvent e) {	
 				EventQueue.invokeLater(new Runnable() {
 					public void run() {
 						try {
@@ -198,6 +214,9 @@ public class CarFrame extends JFrame {
 		});
 		
 		loadButton = new JButton("\u5BFC\u5165\u914D\u7F6E");
+		/**
+		 * 加载配置按钮， 作用只是将配置文件的路径写入loadText文本框
+		 */
 		loadButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -211,16 +230,19 @@ public class CarFrame extends JFrame {
 		loadTextField.setColumns(10);
 		
 		executeButton = new JButton("\u6267\u884C");
+		/**
+		 * 执行配置文件，单独线程
+		 */
 		executeButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				configThread = new ExecuteThread();
+				configThread = new ExecuteThread(carOutputStream);
 				configThread.start();
 			}
 		});
 		
 		/*
-		 * 中止轨迹   要立即中断正在执行的线程
+		 * 中止轨迹   要立即中断正在执行的线程  （未实现）
 		 * */
 		JButton suspendButton = new JButton("\u4E2D\u6B62");
 		suspendButton.addMouseListener(new MouseAdapter() {
@@ -231,6 +253,9 @@ public class CarFrame extends JFrame {
 		});
 		
 		JButton monitorButton = new JButton("\u76D1\u63A7");
+		/**
+		 * 摄像头监控按钮，单击启动另一窗口
+		 */
 		monitorButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -342,13 +367,18 @@ public class CarFrame extends JFrame {
 		);
 		
 		upButton = new JButton("\u524D");
+		/**
+		 * 上下左右控制按钮
+		 * 前进/后退由速度正负决定     后退时将得到的速度取相反数
+		 * 左转/右转有两轮转速差决定   
+		 */
 		upButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				byte mod = 0x01;
-				byte[] buf = new MessagePackage().creatMes(mod, (byte)0x01, Integer.parseInt(speedText.getText()), -1);
-				
+						
 				try {
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.UP, FrontMesPack.MANUAL, -1, 1000, -1, -1);
+					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 					carOutputStream.write(buf, 0, buf.length);		
 					
 				} catch (IOException e1) {
@@ -360,12 +390,11 @@ public class CarFrame extends JFrame {
 		downButton = new JButton("\u540E");
 		downButton.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mousePressed(MouseEvent e) {
-				byte mod = 0x01;
-				byte[] buf = new MessagePackage().creatMes(mod, (byte)0x02, Integer.parseInt(speedText.getText()), -1);
-				
+			public void mousePressed(MouseEvent e) {	
 				try {
-					carOutputStream.write(buf, 0, buf.length);
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.DOWN, FrontMesPack.MANUAL, -1, 1000, -1, -1);
+					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
+					carOutputStream.write(buf, 0, buf.length);	
 									
 				} catch (IOException e1) {
 					JOptionPane.showMessageDialog(contentPane, e1.toString()+e1.getMessage(), "警告", JOptionPane.WARNING_MESSAGE);
@@ -377,11 +406,9 @@ public class CarFrame extends JFrame {
 		leftButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				byte mod = 0x01;
-				byte[] buf = new MessagePackage().creatMes(mod, (byte)0x03, Integer.parseInt(speedText.getText()), -1);
-				
 				try {
-					
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.LEFT, FrontMesPack.MANUAL, -1, 1000, 100, -1);
+					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 					carOutputStream.write(buf, 0, buf.length);
 									
 				} catch (IOException e1) {
@@ -395,10 +422,9 @@ public class CarFrame extends JFrame {
 		rightButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				byte mod = 0x01;
-				byte[] buf = new MessagePackage().creatMes(mod, (byte)0x04, Integer.parseInt(speedText.getText()), -1);
-				
 				try {
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.RIGHT, FrontMesPack.MANUAL, -1, 1000, 100, -1);
+					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 					carOutputStream.write(buf, 0, buf.length);
 								
 				} catch (IOException e1) {
@@ -416,11 +442,10 @@ public class CarFrame extends JFrame {
 		stopButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				byte mod = 0x01;
-				byte[] buf = new MessagePackage().creatMes(mod, (byte)0x05, Integer.parseInt(speedText.getText()), -1);
-				
-				try {
-					carOutputStream.write(buf, 0, buf.length);	
+				try {	
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.STOP_MANUAL, FrontMesPack.MANUAL, -1, -1, -1, -1);
+					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
+					carOutputStream.write(buf, 0, buf.length);
 					
 				} catch (IOException e1) {
 					JOptionPane.showMessageDialog(contentPane, e1.toString()+e1.getMessage(), "警告", JOptionPane.WARNING_MESSAGE);

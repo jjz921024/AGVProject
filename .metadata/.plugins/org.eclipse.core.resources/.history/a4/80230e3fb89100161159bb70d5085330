@@ -1,0 +1,10 @@
+package com.gdut.util;
+
+public class Test {
+
+	public static void main(String[] args) {
+		byte b = (byte) 200;
+		int a = b;
+		System.out.println("aµÄÖµ" + a);
+	}
+}
