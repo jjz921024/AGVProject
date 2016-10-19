@@ -24,18 +24,18 @@ public class FrontMesPack {
 	//转角
 	private int angle;
 	
-	//方向    帮助Parse解析
+	//方向    帮助Parse解析   dir
 	public static final int  UP = 1;
 	public static final int  DOWN = 2;
 	public static final int  LEFT = 3;
 	public static final int  RIGHT = 4;
 	public static final int  STOP_MANUAL = 5;
 	
-	//路径类型
+	//路径类型    type
 	public static final int  LINE = 1;
 	public static final int  ROUND = 2;
 	public static final int  ROTATE = 3;
-	public static final int  STOP = 4;
+	public static final int  STOP = 4;   //配置路径时用到
 		//按钮手动
 	public static final int  START = 5;
 	public static final int  CLOSE = 6;

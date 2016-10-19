@@ -4,10 +4,11 @@ package com.gdut.net;
  * 信息包   10个字节的字符流 
  * 格式：
  * 	第1、2位 ---- 起始位
- *  第3位       ---- 模式选择   (暂时没用)
- *  第4位       ---- 方向    (由delta值决定，delta可正可负)
- *  第5、6位 ---- 速度   16位
- *  第7、8、9位 ---- 预留
+ *  第3位       ---- 方向
+ *  第4、5位 ---- 速度    
+ *  第6、7位 ---- delta
+ *  第8位   ----   拍照
+ *  第9位    ----   状态
  *  第10位     ---- 结束位
  * 
  * */
@@ -32,6 +33,8 @@ public class MessagePackage {
 	//运行时间，供上位机使用，并不发送到ARM上
 	private int time;
 	
+	private int status;
+	
 	//结束位
 	private byte end = 'j';
 	
@@ -46,15 +49,30 @@ public class MessagePackage {
 		mes[4] = (byte) (speed % 256);
 		
 		//是否需要2个字节
-		mes[5] = (byte) delta;	
+		mes[5] = (byte) (delta / 256);
+		mes[6] = (byte) (delta % 256);
 				
-		mes[6] = (byte) capturePhoto;
+		mes[7] = (byte) capturePhoto;
+		
+		mes[8] = (byte) status;
 		
 		return mes;		
 	}
 
 
 	
+	public int getStatus() {
+		return status;
+	}
+
+
+
+	public void setStatus(int status) {
+		this.status = status;
+	}
+
+
+
 	public int getTime() {
 		return time;
 	}

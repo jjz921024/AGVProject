@@ -59,6 +59,9 @@ public class CarFrame extends JFrame {
 	public static JTextField loadTextField;
 	public static JButton executeButton;
 	private Thread configThread;
+	private JTextField radiusText;
+	private JLabel speedSetText;
+	private int dir_last = 0;
 
 
 	/**
@@ -67,7 +70,7 @@ public class CarFrame extends JFrame {
 	public CarFrame() {
 		setTitle("AGV\u4E0A\u4F4D\u673A");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 436, 318);
+		setBounds(100, 100, 435, 343);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -89,8 +92,7 @@ public class CarFrame extends JFrame {
 					if(!carSocket.isClosed()){
 
 						carOutputStream = carSocket.getOutputStream();
-						//byte[] buf = new MessagePackage().creatMesByte((byte)0x00, (byte)0x00, Integer.parseInt(speedText.getText()), -1);
-						FrontMesPack frontMesPack = new FrontMesPack(-1, FrontMesPack.START, -1, -1, -1, -1);
+						FrontMesPack frontMesPack = new FrontMesPack(-1, FrontMesPack.START, -1, 0, -1, -1);
 						byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 						carOutputStream.write(buf, 0, buf.length);
 						
@@ -110,8 +112,8 @@ public class CarFrame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {
-					//byte[] buf = new MessagePackage().creatMes((byte)0xff, (byte)0xff ,Integer.parseInt(speedText.getText()), -1);
-					FrontMesPack frontMesPack = new FrontMesPack(-1, FrontMesPack.CLOSE, -1, -1, -1, -1);
+					
+					FrontMesPack frontMesPack = new FrontMesPack(-1, FrontMesPack.CLOSE, -1, 0, -1, -1);
 					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 					carOutputStream.write(buf, 0, buf.length);
 					//carOutputStream.close();
@@ -142,9 +144,11 @@ public class CarFrame extends JFrame {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if(keyCtrl.isSelected()){
-					byte dir = 0;
+					
+					int dir = 0;
 					if(e.getKeyCode() == KeyEvent.VK_UP ){
 						dir = FrontMesPack.UP;
+						System.out.println("前进");
 					}else if(e.getKeyCode() == KeyEvent.VK_DOWN){
 						dir = FrontMesPack.DOWN;
 					}else if(e.getKeyCode() == KeyEvent.VK_LEFT){
@@ -155,11 +159,55 @@ public class CarFrame extends JFrame {
 						dir = FrontMesPack.STOP_MANUAL;
 					}
 					
+					//加速减速按钮
+					else if(e.getKeyCode() == KeyEvent.VK_W){
+						int temp = Integer.parseInt(speedText.getText()) - 500;
+						if(temp <= 0){
+							temp = 0;
+						} else if(temp >= 5000){
+							temp = 5000;
+						}
+						speedText.setText(String.valueOf((temp)));
+						dir = dir_last;
+						System.out.println("加速");
+					} 
+					else if(e.getKeyCode() == KeyEvent.VK_S){
+						int temp = Integer.parseInt(speedText.getText()) - 500;
+						if(temp <= 0){
+							temp = 0;
+						} else if(temp >= 5000){
+							temp = 5000;
+						}
+						speedText.setText(String.valueOf((temp)));
+						dir = dir_last;
+					}
+					else if(e.getKeyCode() == KeyEvent.VK_E){
+						int temp = Integer.parseInt(radiusText.getText()) + 300;
+						if(temp <= 0){
+							temp = 0;
+						} else if(temp >= 5000){
+							temp = 5000;
+						}
+						radiusText.setText(String.valueOf((temp)));
+						dir = dir_last;
+					}	
+					else if(e.getKeyCode() == KeyEvent.VK_D){
+						int temp = Integer.parseInt(radiusText.getText()) - 300;
+						if(temp <= 0){
+							temp = 0;
+						} else if(temp >= 5000){
+							temp = 5000;
+						}
+						radiusText.setText(String.valueOf((temp)));
+						dir = dir_last;
+					}	
+					
 					if(dir != 0){
 						try {
-							FrontMesPack frontMesPack = new FrontMesPack(dir, FrontMesPack.MANUAL, -1, 1000, 100, -1);
+							FrontMesPack frontMesPack = new FrontMesPack(dir, FrontMesPack.MANUAL, -1, Integer.parseInt(speedText.getText()), Integer.parseInt(radiusText.getText()), -1);
 							byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 							carOutputStream.write(buf, 0, buf.length);					
+							dir_last = dir;
 							
 						} catch (Exception e1) {
 							JOptionPane.showMessageDialog(contentPane, e1.toString()+e1.getMessage(), "警告", JOptionPane.WARNING_MESSAGE);
@@ -169,9 +217,6 @@ public class CarFrame extends JFrame {
 				}	
 			}
 		});
-	
-
-		JLabel speedSetText = new JLabel("\u901F\u5EA6\u8BBE\u5B9A\uFF1A");
 
 		speedText = new JTextField();
 		speedText.setText("1000");
@@ -184,7 +229,7 @@ public class CarFrame extends JFrame {
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				if(ipText.getText().equals("请输入小车IP地址")){
-					ipText.setText("192.168.2.99");
+					ipText.setText("192.168.2.88");
 				}
 				
 			}
@@ -278,6 +323,14 @@ public class CarFrame extends JFrame {
 			}
 		});
 		
+		JLabel radiusSetText = new JLabel("\u8F6C\u5F2F\u534A\u5F84:");
+		
+		radiusText = new JTextField();
+		radiusText.setText("1000");
+		radiusText.setColumns(10);
+		
+		speedSetText = new JLabel("\u901F\u5EA6:");
+		
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -285,47 +338,43 @@ public class CarFrame extends JFrame {
 					.addContainerGap()
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 						.addGroup(gl_contentPane.createSequentialGroup()
-							.addComponent(ipText, GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
-							.addGap(18)
-							.addComponent(ipConnButton, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
+							.addComponent(ipText, GroupLayout.DEFAULT_SIZE, 219, Short.MAX_VALUE)
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(ipDisconnButton, GroupLayout.PREFERRED_SIZE, 80, GroupLayout.PREFERRED_SIZE)
-							.addGap(65))
+							.addComponent(ipConnButton, GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(ipDisconnButton, GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE))
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addComponent(ctrlPanel, GroupLayout.DEFAULT_SIZE, 182, Short.MAX_VALUE)
 							.addGap(18)
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 								.addGroup(gl_contentPane.createSequentialGroup()
-									.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addComponent(speedSetText)
+									.addComponent(executeButton)
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addComponent(suspendButton))
+								.addGroup(gl_contentPane.createSequentialGroup()
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
 										.addGroup(gl_contentPane.createSequentialGroup()
-											.addComponent(speedText, GroupLayout.PREFERRED_SIZE, 82, GroupLayout.PREFERRED_SIZE)
+											.addComponent(configButton, GroupLayout.PREFERRED_SIZE, 91, GroupLayout.PREFERRED_SIZE)
 											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(speedUnit))
-										.addGroup(gl_contentPane.createSequentialGroup()
-											.addComponent(executeButton)
-											.addPreferredGap(ComponentPlacement.RELATED)
-											.addComponent(suspendButton))
-										.addComponent(loadTextField, 168, 168, 168)
+											.addComponent(loadButton, GroupLayout.DEFAULT_SIZE, 81, Short.MAX_VALUE))
 										.addGroup(gl_contentPane.createSequentialGroup()
 											.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-												.addComponent(keyCtrl)
-												.addComponent(configButton))
-											.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-												.addGroup(gl_contentPane.createSequentialGroup()
-													.addGap(18)
-													.addComponent(ipFlag))
-												.addGroup(gl_contentPane.createSequentialGroup()
-													.addPreferredGap(ComponentPlacement.RELATED)
-													.addComponent(loadButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-													.addPreferredGap(ComponentPlacement.RELATED)))))
-									.addGap(61))
-								.addGroup(gl_contentPane.createSequentialGroup()
-									.addComponent(monitorButton)
-									.addPreferredGap(ComponentPlacement.RELATED, 24, Short.MAX_VALUE)
-									.addComponent(exitButton, GroupLayout.PREFERRED_SIZE, 62, GroupLayout.PREFERRED_SIZE)
-									.addGap(50)))))
-					.addGap(62))
+												.addComponent(monitorButton)
+												.addComponent(speedText, GroupLayout.PREFERRED_SIZE, 82, GroupLayout.PREFERRED_SIZE))
+											.addPreferredGap(ComponentPlacement.RELATED)
+											.addComponent(speedUnit)
+											.addGap(2)
+											.addComponent(exitButton, GroupLayout.DEFAULT_SIZE, 72, Short.MAX_VALUE))
+										.addGroup(Alignment.LEADING, gl_contentPane.createSequentialGroup()
+											.addComponent(keyCtrl)
+											.addPreferredGap(ComponentPlacement.RELATED, 75, Short.MAX_VALUE)
+											.addComponent(ipFlag, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE))
+										.addComponent(radiusSetText, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 69, GroupLayout.PREFERRED_SIZE)
+										.addComponent(radiusText, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 82, GroupLayout.PREFERRED_SIZE)
+										.addComponent(speedSetText, Alignment.LEADING)))
+								.addComponent(loadTextField, 168, 168, 168))))
+					.addGap(2))
 		);
 		gl_contentPane.setVerticalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -336,34 +385,39 @@ public class CarFrame extends JFrame {
 						.addComponent(ipDisconnButton))
 					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
 						.addGroup(gl_contentPane.createSequentialGroup()
-							.addGap(18)
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-								.addComponent(keyCtrl)
-								.addComponent(ipFlag))
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addComponent(speedSetText)
+							.addGap(10)
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addGroup(gl_contentPane.createSequentialGroup()
+									.addComponent(keyCtrl)
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addComponent(speedSetText)
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+										.addComponent(speedText, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+										.addComponent(speedUnit))
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addComponent(radiusSetText)
+									.addGap(2)
+									.addComponent(radiusText, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+								.addComponent(ipFlag, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-								.addComponent(speedText, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-								.addComponent(speedUnit))
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-								.addComponent(configButton)
-								.addComponent(loadButton))
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addComponent(loadButton)
+								.addComponent(configButton))
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addComponent(loadTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 							.addPreferredGap(ComponentPlacement.RELATED)
 							.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-								.addComponent(executeButton)
-								.addComponent(suspendButton))
+								.addComponent(executeButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(suspendButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-								.addComponent(monitorButton)
-								.addComponent(exitButton, GroupLayout.DEFAULT_SIZE, 53, Short.MAX_VALUE)))
+							.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+								.addComponent(monitorButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(exitButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
 						.addGroup(gl_contentPane.createSequentialGroup()
 							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(ctrlPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-					.addGap(0))
+							.addComponent(ctrlPanel, GroupLayout.PREFERRED_SIZE, 184, GroupLayout.PREFERRED_SIZE)))
+					.addGap(3))
 		);
 		
 		upButton = new JButton("\u524D");
@@ -377,7 +431,7 @@ public class CarFrame extends JFrame {
 			public void mousePressed(MouseEvent e) {
 						
 				try {
-					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.UP, FrontMesPack.MANUAL, -1, 1000, -1, -1);
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.UP, FrontMesPack.MANUAL, -1, Integer.parseInt(speedText.getText()), -1, -1);
 					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 					carOutputStream.write(buf, 0, buf.length);		
 					
@@ -392,7 +446,7 @@ public class CarFrame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {	
 				try {
-					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.DOWN, FrontMesPack.MANUAL, -1, 1000, -1, -1);
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.DOWN, FrontMesPack.MANUAL, -1, Integer.parseInt(speedText.getText()), -1, -1);
 					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 					carOutputStream.write(buf, 0, buf.length);	
 									
@@ -407,7 +461,7 @@ public class CarFrame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {
-					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.LEFT, FrontMesPack.MANUAL, -1, 1000, 100, -1);
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.LEFT, FrontMesPack.MANUAL, -1, Integer.parseInt(speedText.getText()), Integer.parseInt(radiusText.getText()), -1);
 					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 					carOutputStream.write(buf, 0, buf.length);
 									
@@ -423,7 +477,7 @@ public class CarFrame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				try {
-					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.RIGHT, FrontMesPack.MANUAL, -1, 1000, 100, -1);
+					FrontMesPack frontMesPack = new FrontMesPack(FrontMesPack.RIGHT, FrontMesPack.MANUAL, -1, Integer.parseInt(speedText.getText()), Integer.parseInt(radiusText.getText()), -1);
 					byte[] buf = ParseMesPack.parse(frontMesPack).creatMesByte();
 					carOutputStream.write(buf, 0, buf.length);
 								
